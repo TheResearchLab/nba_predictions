@@ -1,0 +1,6 @@
+airplanesdk~=0.3.36
+mysql-connector-python==8.1.0
+numpy==1.26.1
+pandas==2.1.1
+SQLAlchemy==2.0.21
+nba_api==1.3.1
