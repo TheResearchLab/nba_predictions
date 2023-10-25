@@ -16,7 +16,7 @@ response = requests.get(url)
 historic_games = pd.read_json(response.json(),orient='records')
 
 # Get most recent features for away @ team
-historic_games['GAME_DATE'] = pd.to_datetime(historic_games['GAME_DATE'])
+historic_games['GAME_DATE'] = pd.to_datetime(historic_games['GAME_DATE'],infer_datetime_format=True, errors='coerce')
 
 url = "https://nba-prediction-api.onrender.com/upcoming_games"
 response = requests.get(url)

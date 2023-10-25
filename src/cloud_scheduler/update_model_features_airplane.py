@@ -46,7 +46,7 @@ def update_model_features():
 
     def get_rest_days(game_df):
         game_df['LAST_GAME_DATE'] = game_df.sort_values(by='GAME_DATE').groupby(['TEAM_ID','SEASON'])['GAME_DATE'].shift(1)
-        game_df['NUM_REST_DAYS'] = (pd.to_datetime(game_df['GAME_DATE']) - pd.to_datetime(game_df['LAST_GAME_DATE']))/np.timedelta64(1,'D') 
+        game_df['NUM_REST_DAYS'] = (pd.to_datetime(game_df['GAME_DATE'],infer_datetime_format=True, errors='coerce') - pd.to_datetime(game_df['LAST_GAME_DATE'],infer_datetime_format=True, errors='coerce')).astype('int64') 
         return game_df.drop('LAST_GAME_DATE',axis=1)
 
     def get_feature_df(game_df):
