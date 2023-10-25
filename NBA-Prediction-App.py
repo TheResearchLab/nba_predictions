@@ -21,7 +21,7 @@ historic_games['GAME_DATE'] = pd.to_datetime(historic_games['GAME_DATE'],infer_d
 url = "https://nba-prediction-api.onrender.com/upcoming_games"
 response = requests.get(url)
 upcoming_games = pd.read_json(response.json(),orient='records')
-upcoming_games['GAME_DATE'] = pd.to_datetime(upcoming_games['GAME_DATETIME']).dt.date
+upcoming_games['GAME_DATE'] = upcoming_games['GAME_DATE_EST']
 
 
 url = "https://nba-prediction-api.onrender.com/model_features"

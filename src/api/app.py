@@ -35,18 +35,19 @@ async def read_upcoming_games():
     query = """SELECT gameId as GAME_ID
                      ,homeTeamName as HOME_TEAM_NAME
                      ,awayTeamName as AWAY_TEAM_NAME
-                     ,gameDateTimeUTC as GAME_DATETIME
+                     ,date_format(gameDateEst,'%Y-%m-%d') as GAME_DATE_EST
                      ,homeTeamID as HOME_TEAM_ID
                      ,awayTeamID as AWAY_TEAM_ID
             FROM 
                   stg_nba_schedule
             WHERE 
                   postponedStatus = 'A'
+              AND date_format(gameDateEst,'%Y-%m-%d') >= CURDATE()
               AND (homeTeamId <> 0 and awayTeamID <> 0)
               AND seriesText = '' 
             
             ORDER BY
-                  gameDateTimeUTC ASC
+                  date_format(gameDateEst,'%Y-%m-%d') ASC
             LIMIT 15      """
     df = pd.read_sql_query(query,engine)
     return df.to_json(orient='records')
