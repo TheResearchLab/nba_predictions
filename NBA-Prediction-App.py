@@ -34,13 +34,11 @@ test_data = pd.read_json(response.json(),orient='records').dropna().sort_values(
 
 
 def game_prediction(home_id,away_id):
-    try:
-        outcomes = ['AWAY TEAM','HOME TEAM']
-        home_features = model_features[model_features['team_id'] == home_id].values[0][3:]
-        away_features = model_features[model_features['team_id'] == away_id].values[0][3:]
-        return outcomes[st.session_state.model.predict(np.array([*home_features,*away_features]).reshape(1,14))[0]]
-    except:
-        return 'HOME TEAM'
+    outcomes = ['AWAY TEAM','HOME TEAM']
+    home_features = model_features[model_features['team_id'] == home_id].values[0][3:]
+    away_features = model_features[model_features['team_id'] == away_id].values[0][3:]
+    return outcomes[st.session_state.model.predict(np.array([*home_features,*away_features]).reshape(1,14))[0]]
+    
 
 upcoming_games['MODEL_PREDICTION'] = upcoming_games.apply( lambda row: game_prediction(row['HOME_TEAM_ID'],row['AWAY_TEAM_ID']),axis=1)
 
