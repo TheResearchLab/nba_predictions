@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 import json
 import os 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,text
 import mysql.connector as sql
 
 
@@ -14,7 +14,6 @@ user = os.getenv('DB_USERNAME')
 host = os.getenv('DB_HOST')
 password = os.getenv('DB_PASSWORD')
 
-
 # Create connection w/ mysql.connector
 conn = sql.connect(host=host,
                   database=database,
@@ -22,6 +21,8 @@ conn = sql.connect(host=host,
                   password=password,
                    )
 mycursor = conn.cursor()
+
+
 
 # Create SQL Alchemy Connection
 engine = create_engine(f"mysql+mysqlconnector://{user}:{password}@{host}/{database}")
@@ -72,3 +73,8 @@ def getSingleGameMetrics(gameID,homeTeamID,awayTeamID,awayTeamNickname,seasonYea
         data['GAME_ID'] = gameID
 
     return data
+
+def df_to_db(df,tot_rows,increment):
+    for i in range(0,tot_rows,increment):
+        chunk = df.iloc[i:i + increment]
+        chunk.to_sql('wrk_wl_features', engine, if_exists='append', index=False, method='multi')

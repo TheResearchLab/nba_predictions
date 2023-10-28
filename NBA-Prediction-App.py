@@ -45,12 +45,12 @@ def main():
 
 
     X_test = test_data[['HOME_LAST_GAME_OE', 'HOME_LAST_GAME_HOME_WIN_PCTG',
-        'HOME_NUM_REST_DAYS', 'HOME_LAST_GAME_AWAY_WIN_PCTG',
-        'HOME_LAST_GAME_TOTAL_WIN_PCTG',
+        'HOME_REST_DAY_CNT', 'HOME_LAST_GAME_AWAY_WIN_PCTG',
+        'HOME_LAST_GAME_SEASON_WIN_PCTG',
         'HOME_LAST_GAME_ROLLING_SCORING_MARGIN', 'HOME_LAST_GAME_ROLLING_OE',
         'AWAY_LAST_GAME_OE', 'AWAY_LAST_GAME_HOME_WIN_PCTG',
-        'AWAY_NUM_REST_DAYS', 'AWAY_LAST_GAME_AWAY_WIN_PCTG',
-        'AWAY_LAST_GAME_TOTAL_WIN_PCTG',
+        'AWAY_REST_DAY_CNT', 'AWAY_LAST_GAME_AWAY_WIN_PCTG',
+        'AWAY_LAST_GAME_SEASON_WIN_PCTG',
         'AWAY_LAST_GAME_ROLLING_SCORING_MARGIN', 'AWAY_LAST_GAME_ROLLING_OE']]
     scaler = preprocessing.StandardScaler()
     scaler.fit(X_test)
@@ -87,5 +87,5 @@ try:
 except:
     st.text("404 -  Try Again Later")
     image = Image.open('404_img.jpg')
-    
     st.image(image)
+
