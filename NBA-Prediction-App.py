@@ -5,19 +5,22 @@ import pandas as pd
 import numpy as np
 from sklearn import preprocessing
 from PIL import Image
+import pickle
 
 st.sidebar.success('The Research Lab™')
 
-st.session_state.model = joblib.load('src/model/NBAHomeTeamWinLoss.pkl')
+
  
 def main():
 
-    url = "https://nba-prediction-api.onrender.com/all"
-    response = requests.get(url)
-    historic_games = pd.read_json(response.json(),orient='records')
+    model_version = st.selectbox('Choose Model Version',
+                            ('2021-2022 Model','2022-2023 Model'))
 
-    # Get most recent features for away @ team
-    historic_games['GAME_DATE'] = pd.to_datetime(historic_games['GAME_DATE'],infer_datetime_format=True, errors='coerce')
+    url = "https://nba-prediction-api.onrender.com/wl_model?version=%27v1%27" if model_version == '2021-2022 Model' else "https://nba-prediction-api.onrender.com/wl_model?version=%27v2%27"
+    response = requests.get(url)
+    data = pd.read_json(response.json())
+    st.session_state.model = pickle.loads(bytes.fromhex(data['model_object_hex'][0]))
+
 
     url = "https://nba-prediction-api.onrender.com/upcoming_games"
     response = requests.get(url)
@@ -29,9 +32,11 @@ def main():
     response = requests.get(url)
     model_features = pd.read_json(response.json(),orient='records').drop('season',axis=1).dropna()
 
+
     url = "https://nba-prediction-api.onrender.com/test_data"
     response = requests.get(url)
     test_data = pd.read_json(response.json(),orient='records').dropna().sort_values('GAME_DATE',ascending=True)
+    test_data = test_data[test_data['SEASON'] == '2022-23'] if model_version == '2021-2022 Model' else test_data[test_data['SEASON'] == '2023-24']
 
 
     def game_prediction(home_id,away_id):
@@ -74,7 +79,7 @@ def main():
 
 
 
-    st.title('Previous Year Performance')
+    st.title('Live Performance')
     st.line_chart(test_data,x='GAME_DATE', y=['ACCURACY','PRECISION'])
 
 
