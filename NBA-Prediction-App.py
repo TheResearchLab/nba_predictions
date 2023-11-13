@@ -87,11 +87,9 @@ def main():
     st.table(upcoming_games[['GAME_DATE','HOME_TEAM_NAME','AWAY_TEAM_NAME','MODEL_PREDICTION']])
 
 
-# try:
-#     main()
-# except:
-#     st.text("404 -  Try Again Later")
-#     image = Image.open('404_img.jpg')
-#     st.image(image)
-
-main()
+try:
+    main()
+except:
+    st.text("404 -  Try Again Later")
+    image = Image.open('404_img.jpg')
+    st.image(image)
