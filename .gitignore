@@ -1,3 +1,4 @@
 venv/
 .env
-
+cacert.pem
+settings.json

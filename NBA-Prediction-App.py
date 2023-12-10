@@ -31,7 +31,6 @@ def main():
     response = get(url)
     model_features = read_json(response.json(),orient='records').drop('season',axis=1).dropna()
 
-
     url = "https://nba-prediction-api.onrender.com/test_data"
     response = get(url)
     test_data = read_json(response.json(),orient='records').dropna().sort_values('GAME_DATE',ascending=True)
@@ -87,9 +86,10 @@ def main():
     st.table(upcoming_games[['GAME_DATE','HOME_TEAM_NAME','AWAY_TEAM_NAME','MODEL_PREDICTION']])
 
 
-try:
-    main()
-except:
-    st.text("404 -  Try Again Later")
-    image = Image.open('404_img.jpg')
-    st.image(image)
+#try:
+main()
+#except:
+#    st.text("404 -  Try Again Later")
+#    image = Image.open('404_img.jpg')
+#    st.image(image)
+
