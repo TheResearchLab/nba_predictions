@@ -32,22 +32,25 @@ async def read_all():
 
 @app.get("/upcoming_games")
 async def read_upcoming_games():
-    query = """SELECT gameId as GAME_ID
-                     ,homeTeamName as HOME_TEAM_NAME
-                     ,awayTeamName as AWAY_TEAM_NAME
-                     ,date_format(gameDateEst,'%Y-%m-%d') as GAME_DATE_EST
-                     ,homeTeamID as HOME_TEAM_ID
-                     ,awayTeamID as AWAY_TEAM_ID
-            FROM 
-                  stg_nba_schedule
-            WHERE 
-                  postponedStatus = 'A'
-              AND date_format(gameDateEst,'%Y-%m-%d') >= CURDATE()
-              AND (homeTeamId <> 0 and awayTeamID <> 0)
-              AND seriesText = '' 
+    query = """SELECT sngs.gameId as GAME_ID
+                     ,home.teamName as HOME_TEAM_NAME
+                     ,away.teamName as AWAY_TEAM_NAME
+                     ,DATE_FORMAT(STR_TO_DATE(sngs.gameDateTimeEST, '%Y-%m-%dT%H:%i:%sZ'), '%Y-%m-%d %H:%i:%s') AS GAME_DATE_EST
+                     ,home.teamId as HOME_TEAM_ID
+                     ,away.teamId as AWAY_TEAM_ID
+                FROM 
+                    stg_nba_game_schedule sngs
+                LEFT OUTER JOIN (select * from stg_nba_team_schedule where homeFlag = 1 ) home
+                    ON home.gameId = sngs.gameId
+                LEFT OUTER JOIN (select * from stg_nba_team_schedule where homeFlag = 0 ) away
+                    ON away.gameId = sngs.gameId
+                WHERE 
+                  sngs.postponedStatus = 'A'
+              AND DATE_FORMAT(STR_TO_DATE(sngs.gameDateTimeEST, '%Y-%m-%dT%H:%i:%sZ'), '%Y-%m-%d %H:%i:%s') >= CURDATE()
+              AND sngs.seriesText = '' 
             
             ORDER BY
-                  date_format(gameDateEst,'%Y-%m-%d') ASC
+                  DATE_FORMAT(STR_TO_DATE(sngs.gameDateTimeEST, '%Y-%m-%dT%H:%i:%sZ'), '%Y-%m-%d %H:%i:%s') ASC
             LIMIT 15      """
     df = pd.read_sql_query(query,engine)
     return df.to_json(orient='records')

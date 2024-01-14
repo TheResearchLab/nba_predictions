@@ -16,7 +16,7 @@ def update_model_features():
     #Drop table before rebuilding
     query = "truncate table wrk_wl_features"
     util_funcs.mycursor.execute(query)
-    
+
     #Transformation Functions
     def get_total_win_pctg(game_df):
         game_df['TOTAL_GAMES_PLAYED'] = game_df.groupby(['TEAM_ID','SEASON'])['GAME_DATE'].rank(ascending=True) # check
@@ -45,19 +45,19 @@ def update_model_features():
         return game_df
 
     def get_rest_days(game_df):
-        game_df['LAST_GAME_DATE'] = game_df.sort_values(by='GAME_DATE').groupby(['TEAM_ID','SEASON'])['GAME_DATE'].shift(1)
-        game_df['NUM_REST_DAYS'] = (pd.to_datetime(game_df['GAME_DATE'],infer_datetime_format=True, errors='coerce') - pd.to_datetime(game_df['LAST_GAME_DATE'],infer_datetime_format=True, errors='coerce')).astype('int64') 
+        game_df['LAST_GAME_DATE'] = game_df.sort_values(by='GAME_DATE').groupby(['TEAM_ID','SEASON'])['GAME_DATE_EST'].shift(1)
+        game_df['REST_DAY_CNT'] = (pd.to_datetime(game_df['GAME_DATE'],format='%Y-%m-%d %H:%M:%S') - pd.to_datetime(game_df['LAST_GAME_DATE'],format='%Y-%m-%d %H:%M:%S')).dt.days 
         return game_df.drop('LAST_GAME_DATE',axis=1)
 
     def get_feature_df(game_df):
         
-        skip_columns = ['GAME_ID','SEASON','GAME_DATE']
+        skip_columns = ['GAME_ID','SEASON','GAME_DATE','GAME_DATE_EST']
 
         def get_shifted_df(game_df):
             game_df['LAST_GAME_OE'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['OFFENSIVE_EFFICIENCY'].shift(1)
             game_df['LAST_GAME_HOME_WIN_PCTG'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['HOME_WIN_PCTG'].shift(1)
             game_df['LAST_GAME_AWAY_WIN_PCTG'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['AWAY_WIN_PCTG'].shift(1)
-            game_df['LAST_GAME_TOTAL_WIN_PCTG'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['TOTAL_WIN_PCTG'].shift(1)
+            game_df['LAST_GAME_SEASON_WIN_PCTG'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['TOTAL_WIN_PCTG'].shift(1)
             game_df['LAST_GAME_ROLLING_SCORING_MARGIN'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['ROLLING_SCORING_MARGIN'].shift(1)
             game_df['LAST_GAME_ROLLING_OE'] = game_df.sort_values('GAME_DATE').groupby(['TEAM_ID','SEASON'])['ROLLING_OE'].shift(1)
             return game_df
@@ -65,14 +65,14 @@ def update_model_features():
         
         def get_home_team_df(game_df):
             home_team_df = game_df[game_df['CITY'] != 'OPPONENTS']
-            home_team_df = home_team_df[['LAST_GAME_OE','LAST_GAME_HOME_WIN_PCTG','NUM_REST_DAYS','LAST_GAME_AWAY_WIN_PCTG','LAST_GAME_TOTAL_WIN_PCTG','LAST_GAME_ROLLING_SCORING_MARGIN','LAST_GAME_ROLLING_OE','W','TEAM_ID','GAME_ID','SEASON','GAME_DATE']]
+            home_team_df = home_team_df[['LAST_GAME_OE','LAST_GAME_HOME_WIN_PCTG','REST_DAY_CNT','LAST_GAME_AWAY_WIN_PCTG','LAST_GAME_SEASON_WIN_PCTG','LAST_GAME_ROLLING_SCORING_MARGIN','LAST_GAME_ROLLING_OE','W','TEAM_ID','GAME_ID','SEASON','GAME_DATE']]
             col_rename_dict = {col:'HOME_' + col if col not in skip_columns else col for col in home_team_df.columns}
             home_team_df.rename(columns=col_rename_dict,inplace=True)
             return home_team_df
 
         def get_away_team_df(game_df):
             away_team_df = game_df[game_df['CITY'] == 'OPPONENTS']
-            away_team_df = away_team_df[['LAST_GAME_OE','LAST_GAME_HOME_WIN_PCTG','NUM_REST_DAYS','LAST_GAME_AWAY_WIN_PCTG','LAST_GAME_TOTAL_WIN_PCTG','LAST_GAME_ROLLING_SCORING_MARGIN','LAST_GAME_ROLLING_OE','TEAM_ID','GAME_ID','SEASON']]
+            away_team_df = away_team_df[['LAST_GAME_OE','LAST_GAME_HOME_WIN_PCTG','REST_DAY_CNT','LAST_GAME_AWAY_WIN_PCTG','LAST_GAME_SEASON_WIN_PCTG','LAST_GAME_ROLLING_SCORING_MARGIN','LAST_GAME_ROLLING_OE','TEAM_ID','GAME_ID','SEASON']]
             col_rename_dict = {col:'AWAY_' + col if col not in skip_columns else col for col in away_team_df.columns}
             away_team_df.rename(columns=col_rename_dict,inplace=True)
             return away_team_df
@@ -91,9 +91,10 @@ def update_model_features():
     # Get data
     query = """select
             *
+            ,game_date_est as GAME_DATE
             ,case when city='OPPONENTS' then 0 else 1 end as HOME_FLAG
             ,case when city='OPPONENTS' then 1 else 0 end as AWAY_FLAG
-            ,row_number() over (partition by team_id,season order by game_date asc) as TOT_GAMES_PLAYED
+            ,row_number() over (partition by team_id,season order by game_date_est asc) as TOT_GAMES_PLAYED
             from stg_game_stats"""
 
     game_stats = pd.read_sql_query(query,engine)
